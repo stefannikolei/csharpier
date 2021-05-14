@@ -39,24 +39,21 @@ namespace CSharpier.SyntaxPrinter.SyntaxNodePrinters
                     return Doc.Group(
                         name,
                         Token.Print(attributeNode.ArgumentList.OpenParenToken),
-                        Doc.Indent(
-                            Doc.SoftLine,
-                            SeparatedSyntaxList.Print(
-                                attributeNode.ArgumentList.Arguments,
-                                attributeArgumentNode =>
-                                    Doc.Concat(
-                                        attributeArgumentNode.NameEquals != null
-                                            ? NameEquals.Print(attributeArgumentNode.NameEquals)
-                                            : Doc.Null,
-                                        attributeArgumentNode.NameColon != null
-                                            ? NameColon.Print(attributeArgumentNode.NameColon)
-                                            : Doc.Null,
-                                        Node.Print(attributeArgumentNode.Expression)
-                                    ),
-                                Doc.Line
-                            ),
-                            Token.Print(attributeNode.ArgumentList.CloseParenToken)
-                        )
+                        attributeNode.ArgumentList.Arguments.Any()
+                            ? attributeNode.ArgumentList.Arguments.Count > 1
+                                    ? Doc.Indent(
+                                            Doc.SoftLine,
+                                            SeparatedSyntaxList.Print(
+                                                attributeNode.ArgumentList.Arguments,
+                                                PrintAttributeArgument,
+                                                Doc.Line
+                                            )
+                                        )
+                                    : PrintAttributeArgument(
+                                            attributeNode.ArgumentList.Arguments[0]
+                                        )
+                            : Doc.Null,
+                        Token.Print(attributeNode.ArgumentList.CloseParenToken)
                     );
                 },
                 Doc.Line
@@ -75,5 +72,16 @@ namespace CSharpier.SyntaxPrinter.SyntaxNodePrinters
 
             return Doc.Group(docs);
         }
+
+        private static Doc PrintAttributeArgument(AttributeArgumentSyntax attributeArgumentNode) =>
+            Doc.Concat(
+                attributeArgumentNode.NameEquals != null
+                    ? NameEquals.Print(attributeArgumentNode.NameEquals)
+                    : Doc.Null,
+                attributeArgumentNode.NameColon != null
+                    ? NameColon.Print(attributeArgumentNode.NameColon)
+                    : Doc.Null,
+                Node.Print(attributeArgumentNode.Expression)
+            );
     }
 }
