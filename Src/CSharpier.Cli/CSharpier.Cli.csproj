@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="Ignore" Version="0.1.42" />
+        <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-alpha.1.21560.2" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
         <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
         <PackageReference Include="System.IO.Abstractions" Version="13.2.29" />
