@@ -109,3 +109,8 @@ public class ClassName
             Guid.NewGuid()
         };
 }
+
+interface PropertyInterface
+{
+    int NoGetSet { }
+}
