@@ -84,9 +84,10 @@ internal static class BasePropertyDeclaration
                 separator = Doc.Line;
             }
 
-            // this affected very few things - https://github.com/belav/csharpier-repos/pull/64/files
-            // maybe not worth it?
-            if (node.AccessorList.Accessors.All(o => o.Modifiers.Any()))
+            if (
+                node.AccessorList.Accessors.Any()
+                && node.AccessorList.Accessors.All(o => o.Modifiers.Any())
+            )
             {
                 separator = Doc.HardLine;
             }
