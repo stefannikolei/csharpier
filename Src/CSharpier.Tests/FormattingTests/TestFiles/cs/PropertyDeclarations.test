@@ -5,6 +5,12 @@ public class ClassName
 
     string ShortModifiers { get; private set; }
 
+    string LongModifiers
+    {
+        protected internal get;
+        protected internal set;
+    }
+
     string PropertyWithModifiersThatIsLongEnoughToBreak
     {
         protected internal get;
