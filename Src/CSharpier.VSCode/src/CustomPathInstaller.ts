@@ -2,18 +2,27 @@ import { Logger } from "./Logger";
 import * as path from "path";
 import * as fs from "fs";
 import { execSync } from "child_process";
+import { workspace } from "vscode";
 
 export class CustomPathInstaller {
     logger: Logger;
+    customPath: string;
 
     constructor(logger: Logger) {
         this.logger = logger;
+        this.customPath =
+            workspace.getConfiguration("csharpier").get<string>("dev.customPath") ?? "";
     }
 
     public ensureVersionInstalled(version: string) {
         if (!version) {
             return;
         }
+        if (this.customPath !== "") {
+            this.logger.debug("Using csharpier at a custom path of " + this.customPath);
+            return;
+        }
+
         const pathToDirectoryForVersion = this.getDirectoryForVersion(version);
         if (fs.existsSync(pathToDirectoryForVersion)) {
             try {
@@ -51,6 +60,10 @@ export class CustomPathInstaller {
     }
 
     private getDirectoryForVersion(version: string) {
+        if (this.customPath !== "") {
+            return this.customPath;
+        }
+
         const result =
             process.platform !== "win32"
                 ? path.resolve(process.env.HOME!, ".cache/csharpier", version)

@@ -27,7 +27,7 @@ public class Program
         bool skipWrite,
         bool writeStdout,
         bool pipeMultipleFiles,
-        bool namedPipe,
+        bool grpc,
         bool noCache,
         bool noMSBuildCheck,
         string configPath,
@@ -43,10 +43,15 @@ public class Program
 
         if (pipeMultipleFiles)
         {
-            return await PipingFormatter.PipeMultipleFiles(console, logger, actualConfigPath, cancellationToken);
+            return await PipingFormatter.PipeMultipleFiles(
+                console,
+                logger,
+                actualConfigPath,
+                cancellationToken
+            );
         }
 
-        if (namedPipe)
+        if (grpc)
         {
             return await ProtoFormatter.Pipe(console, logger, actualConfigPath, cancellationToken);
         }
@@ -61,7 +66,11 @@ public class Program
                 Console.OpenStandardInput(),
                 console.InputEncoding
             );
-            standardInFileContents = await streamReader.ReadToEndAsync(cancellationToken);
+            standardInFileContents = await streamReader.ReadToEndAsync(
+#if NET7_0_OR_GREATER
+                cancellationToken
+#endif
+            );
 
             directoryOrFile = new[] { Directory.GetCurrentDirectory() };
             originalDirectoryOrFile = new[] { Directory.GetCurrentDirectory() };

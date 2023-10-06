@@ -8,10 +8,12 @@ import { FormatFileResult } from "./proto/proto/FormatFileResult";
 import * as vscode from "vscode";
 import { TaskDefinition, TaskRevealKind } from "vscode";
 import { CSharpierServiceClient } from "./proto/proto/CSharpierService";
+import * as path from "path";
 
-export class CSharpierProcessProto implements ICSharpierProcess {
+export class CSharpierProcessGrpc implements ICSharpierProcess {
     private logger: Logger;
     private client: CSharpierServiceClient;
+    private clientIsReady = false;
 
     constructor(logger: Logger, csharpierPath: string, workingDirectory: string) {
         this.logger = logger;
@@ -20,20 +22,20 @@ export class CSharpierProcessProto implements ICSharpierProcess {
             type: "string",
         };
 
+        // TODO what about linux? and why is this needed in here?
+        // maybe because this is using ProcessExecution vs just a process?
+        csharpierPath += ".exe";
+
+        // TODO need to get the port back from this somehow
         let task = new vscode.Task(
             definition,
             vscode.TaskScope.Workspace,
             "csharpier",
             "csharpier",
-            // TODO use proper path
-            new vscode.ProcessExecution(
-                "C:\\projects\\csharpier\\Src\\CSharpier.Cli\\bin\\Debug\\net7.0\\dotnet-csharpier.exe",
-                ["--named-pipe"],
-                {
-                    cwd: workingDirectory,
-                    env: { ...process.env, DOTNET_NOLOGO: "1" },
-                },
-            ),
+            new vscode.ProcessExecution(csharpierPath, ["--grpc"], {
+                cwd: workingDirectory,
+                env: { ...process.env, DOTNET_NOLOGO: "1" },
+            }),
         );
 
         task.presentationOptions.reveal = TaskRevealKind.Never;
@@ -41,9 +43,8 @@ export class CSharpierProcessProto implements ICSharpierProcess {
         vscode.tasks.executeTask(task);
 
         const host = "0.0.0.0:50052";
-        // TODO how do we get this into the build dir? do we need webpack to understand it?
-        // TODO i had to copy it there after npm run start, otherwise webpack kills it off
-        const packageDefinition = protoLoader.loadSync(__dirname + "/proto/csharpier.proto");
+        const protoFile = require("./proto/csharpier.proto");
+        const packageDefinition = protoLoader.loadSync(path.join(__dirname, protoFile));
         const proto = grpc.loadPackageDefinition(packageDefinition) as unknown as ProtoGrpcType;
 
         this.client = new proto.proto.CSharpierService(host, grpc.credentials.createInsecure());
@@ -52,7 +53,9 @@ export class CSharpierProcessProto implements ICSharpierProcess {
         this.client.waitForReady(deadline, (error?: Error) => {
             if (error) {
                 this.logger.info(`Client connect error: ${error.message}`);
+                this.clientIsReady = true;
             } else {
+                this.clientIsReady = true;
                 this.logger.debug("Warm CSharpier with initial format");
                 // warm by formatting a file twice, the 3rd time is when it gets really fast
                 this.formatFile("public class ClassName { }", "Test.cs").then(() => {
@@ -63,8 +66,14 @@ export class CSharpierProcessProto implements ICSharpierProcess {
     }
 
     formatFile(content: string, filePath: string): Promise<string> {
-        // TODO if the client is not connected, then queue these up
-        return new Promise<string>(resolve => {
+        const sleep = (delay: number) => new Promise(resolve => setTimeout(resolve, delay));
+
+        return new Promise<string>(async resolve => {
+            // TODO this should have a limit for how long it sleeps
+            while (!this.clientIsReady) {
+                await sleep(10);
+            }
+
             this.client.formatFile(
                 {
                     FileName: filePath,

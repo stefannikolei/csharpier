@@ -44,9 +44,20 @@
                 "title": "CSharpier",
                 "properties": {
                     "csharpier.enableDebugLogs": {
+                        "order": 0,
                         "type": "boolean",
                         "default": false,
                         "description": "Enable debug logs."
+                    },
+                    "csharpier.dev.enableGrpc": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Enable GRPC communication to csharpier - Experimental as of 0.26.0"
+                    },
+                    "csharpier.dev.customPath": {
+                        "type": "string",
+                        "default": "",
+                        "description": "Path to dotnet-csharpier - used for testing the extension with new versions of csharpier."
                     }
                 }
             }

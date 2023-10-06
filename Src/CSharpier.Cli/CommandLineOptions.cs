@@ -25,7 +25,7 @@ public class CommandLineOptions
         bool skipWrite,
         bool writeStdout,
         bool pipeMultipleFiles,
-        bool namedPipe,
+        bool grpc,
         bool noCache,
         bool noMSBuildCheck,
         string config,
@@ -76,11 +76,7 @@ public class CommandLineOptions
                 new[] { "--pipe-multiple-files" },
                 "Keep csharpier running so that multiples files can be piped to it via stdin"
             ),
-            // TODO this needs a proper name
-            new Option(
-                new[] { "--named-pipe" },
-                "Keep csharpier running so that multiples files can be piped to it via stdin"
-            ),
+            new Option(new[] { "--grpc" }, "TODO"),
             new Option<string>(
                 new[] { "--config-path" },
                 "Path to the CSharpier configuration file"
@@ -96,7 +92,7 @@ public class CommandLineOptions
             if (
                 !Console.IsInputRedirected
                 && !cmd.Children.Contains("directoryOrFile")
-                && !cmd.Children.Contains("--named-pipe")
+                && !cmd.Children.Contains("--grpc")
             )
             {
                 return "directoryOrFile is required when not piping stdin to CSharpier";
