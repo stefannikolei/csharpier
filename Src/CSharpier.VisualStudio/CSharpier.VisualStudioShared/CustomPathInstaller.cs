@@ -26,6 +26,15 @@ namespace CSharpier.VisualStudio
             {
                 return;
             }
+
+            if (!string.IsNullOrEmpty(CSharpierOptions.Instance.CustomPath))
+            {
+                this.logger.Debug(
+                    "Using csharpier at custom path of " + CSharpierOptions.Instance.CustomPath
+                );
+                return;
+            }
+
             var pathToDirectoryForVersion = this.GetDirectoryForVersion(version);
             if (Directory.Exists(pathToDirectoryForVersion))
             {
@@ -74,6 +83,11 @@ namespace CSharpier.VisualStudio
 
         private string GetDirectoryForVersion(string version)
         {
+            if (!string.IsNullOrEmpty(CSharpierOptions.Instance.CustomPath))
+            {
+                return CSharpierOptions.Instance.CustomPath;
+            }
+
             return Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "CSharpier",

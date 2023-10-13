@@ -43,7 +43,7 @@ public class Program
 
         if (pipeMultipleFiles)
         {
-            return await PipingFormatter.PipeMultipleFiles(
+            return await PileMultipleFilesFormatter.StartServer(
                 console,
                 logger,
                 actualConfigPath,
@@ -53,7 +53,11 @@ public class Program
 
         if (grpc)
         {
-            return await ProtoFormatter.Pipe(console, logger, actualConfigPath, cancellationToken);
+            return await GrpcFormatter.StartServer(
+                logger,
+                actualConfigPath,
+                cancellationToken
+            );
         }
 
         var directoryOrFileNotProvided = directoryOrFile is null or { Length: 0 };

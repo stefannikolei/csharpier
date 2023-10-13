@@ -2,7 +2,7 @@ namespace CSharpier.Cli.Tests;
 
 using System.Diagnostics;
 using System.Text;
-using CSharpierService.Generated;
+using CSharpier.Proto;
 using FluentAssertions;
 using Grpc.Core;
 using NUnit.Framework;
@@ -15,33 +15,38 @@ public class GrpcTests
     public async Task Stuff()
     {
         var path = Path.Combine(Directory.GetCurrentDirectory(), "dotnet-csharpier.dll");
-        
-        var processStartInfo = new ProcessStartInfo("dotnet", $"{path} --named-pipe")
+
+        var processStartInfo = new ProcessStartInfo("dotnet", $"{path} --grpc")
         {
-            RedirectStandardInput = true,
+            UseShellExecute = false,
+            ErrorDialog = false,
+            CreateNoWindow = true,
+            WindowStyle = ProcessWindowStyle.Hidden,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            EnvironmentVariables =
-            {
-                ["DOTNET_NOLOGO"] = "1"
-            }
+            EnvironmentVariables = { ["DOTNET_NOLOGO"] = "1" },
         };
 
         var process = new Process { StartInfo = processStartInfo };
         process.Start();
 
-        var output = await process.StandardOutput.ReadLineAsync();
+        var portString = (await process.StandardOutput.ReadLineAsync() ?? string.Empty).Replace(
+            "Started on ",
+            string.Empty
+        );
+        var port = int.Parse(portString);
 
-        var channel = new Channel("localhost", 50052, ChannelCredentials.Insecure);
+        // TODO why the shit won't this connect now?
+        var channel = new Channel("localhost", port, ChannelCredentials.Insecure);
         var client = new CSharpierService.CSharpierServiceClient(channel);
 
-        var data = new FormatFileDto { FileName = "test.cs", FileContents = "public class TestClass    { }"};
+        var data = new FormatFileDto
+        {
+            FileName = "test.cs",
+            FileContents = "public class TestClass    { }"
+        };
         var result = await client.FormatFileAsync(data);
 
-        result.FormattedFile.Should().Be("public class TestClass { }");
+        result.FormattedFile.TrimEnd().Should().Be("public class TestClass { }");
     }
 }

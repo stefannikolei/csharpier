@@ -4,9 +4,9 @@ using System.IO.Abstractions;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-public class PipingFormatter
+public static class PileMultipleFilesFormatter
 {
-    public static async Task<int> PipeMultipleFiles(
+    public static async Task<int> StartServer(
         SystemConsole console,
         ILogger logger,
         string? configPath,

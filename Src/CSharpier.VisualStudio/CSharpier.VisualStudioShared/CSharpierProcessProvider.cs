@@ -14,12 +14,9 @@ namespace CSharpier.VisualStudio
 
         private bool warnedForOldVersion;
 
-        private readonly Dictionary<string, bool> warmingByDirectory =
-            new Dictionary<string, bool>();
-        private readonly Dictionary<string, string> csharpierVersionByDirectory =
-            new Dictionary<string, string>();
-        private readonly Dictionary<string, ICSharpierProcess> csharpierProcessesByVersion =
-            new Dictionary<string, ICSharpierProcess>();
+        private readonly Dictionary<string, bool> warmingByDirectory = new();
+        private readonly Dictionary<string, string> csharpierVersionByDirectory = new();
+        private readonly Dictionary<string, ICSharpierProcess> csharpierProcessesByVersion = new();
 
         private static CSharpierProcessProvider? instance;
 
@@ -203,6 +200,11 @@ namespace CSharpier.VisualStudio
 
                 var installedVersion = new Version(version);
                 var pipeFilesVersion = new Version("0.12.0");
+                if (CSharpierOptions.Instance.EnableGrpc)
+                {
+                    return new CSharpierProcessGrpc(customPath, this.logger);
+                }
+
                 if (installedVersion.CompareTo(pipeFilesVersion) < 0)
                 {
                     if (!this.warnedForOldVersion)
